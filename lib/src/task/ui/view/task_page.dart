@@ -26,12 +26,12 @@ class _TaskPageState extends State<TaskPage> with Validators {
   void dispose() {
     super.dispose();
     widget.taskViewmodel.dispose();
+    titleController.dispose();
+    descriptionController.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _showDialogError();
-
     return Scaffold(
       appBar: AppBar(
         title: Text('Tasks'),
@@ -40,6 +40,25 @@ class _TaskPageState extends State<TaskPage> with Validators {
         child: ValueListenableBuilder(
           valueListenable: widget.taskViewmodel,
           builder: (_, state, __) {
+            if (state is TaskError) {
+              WidgetsBinding.instance.addPostFrameCallback(
+                (timeStamp) {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('mensagem de erro:'),
+                      content: Text(state.message),
+                      actions: [
+                        ElevatedButton(
+                            onPressed: Navigator.of(context).pop,
+                            child: Text('Ok'))
+                      ],
+                    ),
+                  );
+                },
+              );
+            }
+
             if (state is TaskLoading) {
               return CircularProgressIndicator();
             }
@@ -54,7 +73,8 @@ class _TaskPageState extends State<TaskPage> with Validators {
                       itemCount: state.tasks.length,
                       itemBuilder: (context, index) {
                         return ListTile(
-                          title: Text(state.tasks[index].title),
+                          title: Text(
+                              '${state.tasks[index].id} ${state.tasks[index].title}'),
                           subtitle: Text(state.tasks[index].description),
                           leading: Checkbox(
                             value: state.tasks[index].isDone,
@@ -81,57 +101,46 @@ class _TaskPageState extends State<TaskPage> with Validators {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(onPressed: () {
-        showModalBottomSheet(
-          context: context,
-          builder: (context) {
-            return Form(
-              key: keyForm,
-              child: Column(
-                children: [
-                  Text('Preencha os campos para criar a tarefa'),
-                  TextFormField(
-                    controller: titleController,
-                    decoration: InputDecoration(labelText: 'titulo'),
-                    validator: titleValidator,
+      floatingActionButton: FloatingActionButton(
+          child: Icon(Icons.task),
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (context) {
+                return Form(
+                  key: keyForm,
+                  child: Column(
+                    children: [
+                      Text('Preencha os campos para criar a tarefa'),
+                      TextFormField(
+                        controller: titleController,
+                        decoration: InputDecoration(labelText: 'titulo'),
+                        validator: titleValidator,
+                      ),
+                      TextFormField(
+                        controller: descriptionController,
+                        decoration: InputDecoration(labelText: 'descrição'),
+                        validator: descriptionValidator,
+                      ),
+                      ElevatedButton(
+                          onPressed: () {
+                            if (keyForm.currentState?.validate() ?? false) {
+                              widget.taskViewmodel.createTaskEvent(
+                                  task: TaskModel(
+                                      title: titleController.text,
+                                      description: descriptionController.text));
+                              Navigator.of(context).pop();
+                              titleController.clear();
+                              descriptionController.clear();
+                            }
+                          },
+                          child: Text('criar tarefa'))
+                    ],
                   ),
-                  TextFormField(
-                    controller: descriptionController,
-                    decoration: InputDecoration(labelText: 'descrição'),
-                    validator: descriptionValidator,
-                  ),
-                  ElevatedButton(
-                      onPressed: () {
-                        if (keyForm.currentState?.validate() ?? false) {
-                          widget.taskViewmodel.createTaskEvent(
-                              task: TaskModel(
-                                  title: titleController.text,
-                                  description: descriptionController.text));
-                        }
-                      },
-                      child: Text('criar tarefa'))
-                ],
-              ),
+                );
+              },
             );
-          },
-        );
-      }),
+          }),
     );
-  }
-
-  _showDialogError() {
-    if (widget.taskViewmodel.value is TaskError) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('mensagem de erro:'),
-          content: Text((widget.taskViewmodel.value as TaskError).message),
-          actions: [
-            ElevatedButton(
-                onPressed: Navigator.of(context).pop, child: Text('Ok'))
-          ],
-        ),
-      );
-    }
   }
 }

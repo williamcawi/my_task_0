@@ -12,7 +12,7 @@ class TaskViewmodel extends ValueNotifier<TaskState> {
 
   void getTasksEvent() async {
     value = TaskLoading();
-    final either = _taskRepository.getTasks();
+    final either = await _taskRepository.getTasks();
     either.fold((message) {
       value = TaskError(message: message);
     }, (tasks) {
@@ -22,7 +22,7 @@ class TaskViewmodel extends ValueNotifier<TaskState> {
 
   void createTaskEvent({required TaskModel task}) async {
     value = TaskLoading();
-    final either = _taskRepository.createTasks(task: task);
+    final either = await _taskRepository.createTasks(task: task);
     either.fold((message) {
       value = TaskError(message: message);
     }, (tasks) {
@@ -32,7 +32,7 @@ class TaskViewmodel extends ValueNotifier<TaskState> {
 
   void updateTaskEvent({required TaskModel task}) async {
     value = TaskLoading();
-    final either = _taskRepository.updateTasks(task: task);
+    final either = await _taskRepository.updateTasks(task: task);
     either.fold((message) {
       value = TaskError(message: message);
     }, (tasks) {
@@ -42,7 +42,7 @@ class TaskViewmodel extends ValueNotifier<TaskState> {
 
   void deleteTaskEvent({required int id}) async {
     value = TaskLoading();
-    final either = _taskRepository.deleteTasks(id: id);
+    final either = await _taskRepository.deleteTasks(id: id);
     either.fold((message) {
       value = TaskError(message: message);
     }, (tasks) {

@@ -22,4 +22,12 @@ class TaskModel {
       description: description ?? this.description,
     );
   }
+
+  factory TaskModel.fromMap(Map<String, dynamic> map) {
+    return TaskModel(
+        id: map['id'],
+        title: map['title'],
+        description: map['description'],
+        isDone: map['isDone']);
+  }
 }
